@@ -5,24 +5,28 @@ set -eux
 PRESET="veryslow"
 
 RAW_DIR="/mnt/htfp/raw"
-INTERMEDIATE_DIR="$(mktmp -d)"
 FINAL_DIR="/mnt/htfp/final"
 
 RAW="${RAW_DIR}/01-intro5-good.mkv"
-INTERMEDIATE="${INTERMEDIATE_DIR}/01-intro5-bad-audio.mp4"
+INTERMEDIATE="$(mktemp --suffix=.mp4)"
 FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 01 - Intro.mp4"
 CHOP_START="00:00:04.3"
 CHOP_DURATION="00:09:09.0"
 AUDIO_SKEW="0.10"
 
-if [ ! -f "$FINAL" ]; then
-  ffmpeg -ss "$CHOP_START" -i "$RAW" -filter:a "dynaudnorm" -preset "$PRESET" -t "$CHOP_DURATION" "$INTERMEDIATE" -y
+function normalize_audio_levels() {
+  INPUT_FILE="$1"
+  ffmpeg-normalize "$INPUT_FILE" -c:a aac -b:a 192k -o "$INPUT_FILE" -f
+}
 
+if [ ! -f "$FINAL" ]; then
+  ffmpeg -ss "$CHOP_START" -i "$RAW" -t "$CHOP_DURATION" "$INTERMEDIATE" -y
+  normalize_audio_levels "$INTERMEDIATE"
   ffmpeg -i "$INTERMEDIATE" -itsoffset "$AUDIO_SKEW" -i "$INTERMEDIATE" -map 0:v -map 1:a -preset "$PRESET" "$FINAL" -y
 fi
 
 RAW="${RAW_DIR}/02-understand-hn-pretty-good.mkv"
-INTERMEDIATE="${INTERMEDIATE_DIR}/02-understand-hn.mp4"
+INTERMEDIATE="$(mktemp --suffix=.mp4)"
 FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 02 - Understand Hacker News.mp4"
 CHOP_START="00:00:02.5"
 CHOP_END="00:24:38.0"
@@ -30,20 +34,19 @@ AUDIO_SKEW="0.23"
 
 if [ ! -f "$FINAL" ]; then
   ffmpeg -i "$RAW" -ss "$CHOP_START" -to "$CHOP_END" -c copy "$INTERMEDIATE" -y
-
-  ffmpeg -i "$INTERMEDIATE" -itsoffset "$AUDIO_SKEW" -i "$INTERMEDIATE" -map 0:v -map 1:a -filter:a "dynaudnorm" -preset "$PRESET" "$FINAL" -y
+  normalize_audio_levels "$INTERMEDIATE"
+  ffmpeg -i "$INTERMEDIATE" -itsoffset "$AUDIO_SKEW" -i "$INTERMEDIATE" -map 0:v -map 1:a -preset "$PRESET" "$FINAL" -y
 fi
 
 
 RAW="${RAW_DIR}/04-find-a-plan-b.mkv"
-INTERMEDIATE_A="${INTERMEDIATE_DIR}/04-find-a-plan-b-1.mp4"
-INTERMEDIATE_B="${INTERMEDIATE_DIR}/04-find-a-plan-b-2.mp4"
-INTERMEDIATE="${INTERMEDIATE_DIR}/04-find-a-plan-b.mp4"
-FILE_INDEX="${INTERMEDIATE_DIR}/htfp-file-index.txt"
+INTERMEDIATE_A="$(mktemp --suffix=.mp4)"
+INTERMEDIATE_B="$(mktemp --suffix=.mp4)"
+INTERMEDIATE="$(mktemp --suffix=.mp4)"
+FILE_INDEX="$(mktemp --suffix=.txt)"
 FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 04 - Find a Plan B.mp4"
 CHOP_START_A="00:00:02.0"
 CHOP_END_A="00:39:36.5"
-#$CHOP_END="00:00:30.0"
 AUDIO_SKEW="0.25"
 
 CHOP_START_B="00:39:59.0"
@@ -58,11 +61,13 @@ if [ ! -f "$FINAL" ]; then
 
   ffmpeg -f concat -safe 0 -i "$FILE_INDEX" -preset "$PRESET" "$INTERMEDIATE" -y
 
-  ffmpeg -i "$INTERMEDIATE" -itsoffset "$AUDIO_SKEW" -i "$INTERMEDIATE" -map 0:v -map 1:a -filter:a "dynaudnorm" -preset "$PRESET" "$FINAL" -y
+  normalize_audio_levels "$INTERMEDIATE"
+
+  ffmpeg -i "$INTERMEDIATE" -itsoffset "$AUDIO_SKEW" -i "$INTERMEDIATE" -map 0:v -map 1:a -preset "$PRESET" "$FINAL" -y
 fi
 
 RAW="${RAW_DIR}/05-elevate-your-writing.mkv"
-INTERMEDIATE="${INTERMEDIATE_DIR}/05-elevate-your-writing.mp4"
+INTERMEDIATE="$(mktemp --suffix=.mp4)"
 FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 05 - Elevate Your Writing.mp4"
 CHOP_START="00:00:02.0"
 CHOP_END="00:39:08.5"
@@ -70,6 +75,7 @@ AUDIO_SKEW="0.23"
 
 if [ ! -f "$FINAL" ]; then
   ffmpeg -i "$RAW" -ss "$CHOP_START" -to "$CHOP_END" -c copy "$INTERMEDIATE" -y
-  ffmpeg -i "$INTERMEDIATE" -itsoffset "$AUDIO_SKEW" -i "$INTERMEDIATE" -map 0:v -map 1:a -filter:a "dynaudnorm" -preset "$PRESET" "$FINAL" -y
+  normalize_audio_levels "$INTERMEDIATE"
+  ffmpeg -i "$INTERMEDIATE" -itsoffset "$AUDIO_SKEW" -i "$INTERMEDIATE" -map 0:v -map 1:a -preset "$PRESET" "$FINAL" -y
 fi
 
