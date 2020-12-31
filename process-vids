@@ -38,6 +38,36 @@ if [ ! -f "$FINAL" ]; then
   ffmpeg -i "$INTERMEDIATE" -itsoffset "$AUDIO_SKEW" -i "$INTERMEDIATE" -map 0:v -map 1:a -preset "$PRESET" "$FINAL" -y
 fi
 
+RAW_FORMAT="${RAW_DIR}/03-choose-winning-topics-%s.mkv"
+
+FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 03 - Choose Winning Topics.mp4"
+AUDIO_SKEW="0.25"
+
+CHOP_STARTS=("00:00:03.4" "00:00:03.0" "00:00:02.5" "00:00:02.8" "00:00:02.8")
+CHOP_ENDS=(  "00:11:53.8" "00:17:04.0" "00:03:36.9" "00:07:04.9" "00:04:12.0")
+
+if [ ! -f "$FINAL" ]; then
+  INTERMEDIATE_DIR="$(mktemp -d)"
+  FILE_INDEX="$(mktemp --suffix=.txt)"
+
+  for i in "${!CHOP_STARTS[@]}"; do
+    INDEX=$(expr $i + 1)
+    RAW_FILE="$(printf $RAW_FORMAT $INDEX)"
+    INTERMEDIATE_FILE="${INTERMEDIATE_DIR}/$(basename $RAW_FILE)"
+    CHOP_START="${CHOP_STARTS[$i]}"
+    CHOP_END="${CHOP_ENDS[$i]}"
+    ffmpeg  -i "$RAW_FILE" -ss "$CHOP_START" -to "$CHOP_END" -preset "$PRESET" "$INTERMEDIATE_FILE"
+    
+    echo "file '$INTERMEDIATE_FILE'" >> "$FILE_INDEX" 
+  done
+
+  MERGED_FILE="${INTERMEDIATE_DIR}/merged.mp4"
+  ffmpeg -f concat -safe 0 -i "$FILE_INDEX" -c copy -max_muxing_queue_size 4096 "$MERGED_FILE"
+
+  normalize_audio_levels "$MERGED_FILE"
+
+  ffmpeg -i "$MERGED_FILE" -itsoffset "$AUDIO_SKEW" -i "$MERGED_FILE" -map 0:v -map 1:a -c:v copy "$FINAL" -y
+fi
 
 RAW="${RAW_DIR}/04-find-a-plan-b.mkv"
 INTERMEDIATE_A="$(mktemp --suffix=.mp4)"
@@ -77,32 +107,4 @@ if [ ! -f "$FINAL" ]; then
   ffmpeg -i "$RAW" -ss "$CHOP_START" -to "$CHOP_END" -c copy "$INTERMEDIATE" -y
   normalize_audio_levels "$INTERMEDIATE"
   ffmpeg -i "$INTERMEDIATE" -itsoffset "$AUDIO_SKEW" -i "$INTERMEDIATE" -map 0:v -map 1:a -preset "$PRESET" "$FINAL" -y
-fi
-
-RAW_FORMAT="${RAW_DIR}/03-choose-winning-topics-%d.mkv"
-INTERMEDIATE_DIR="$(mktemp -d)"
-FILE_INDEX="$(mktemp --suffix=.txt)"
-FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 03 - Choose Winning Topics.mp4"
-CHOP_START_A="00:00:02.0"
-CHOP_END_A="00:39:36.5"
-AUDIO_SKEW="0.25"
-
-CHOP_STARTS=("00:00:00.0" "00:00:00.0" "00:00:00.0" "00:00:00.0" "00:00:00.0" "00:00:00.0" "00:00:00.0" "00:00:00.0" "00:00:00.0")
-CHOP_ENDS=("00:00:00.0" "00:00:00.0" "00:00:00.0" "00:00:00.0" "00:00:00.0" "00:00:00.0" "00:00:00.0" "00:00:00.0" "00:00:00.0")
-
-if [ ! -f "$FINAL" ]; then
-  for i in "${!CHOP_STARTS[@]}"; do
-    CHOP_START="${CHOP_STARTS[$i]}"
-    CHOP_END="${CHOP_ENDS[$i]}"
-    #ffmpeg  -i "$RAW" -ss "$CHOP_START_A" -to "$CHOP_END_A" -c copy "$INTERMEDIATE_A" -y
-  done
-
-  #echo "file '$INTERMEDIATE_A'" >  "$FILE_INDEX"
-  #echo "file '$INTERMEDIATE_B'" >> "$FILE_INDEX" 
-
-  #ffmpeg -f concat -safe 0 -i "$FILE_INDEX" -preset "$PRESET" "$INTERMEDIATE" -y
-
-  #normalize_audio_levels "$INTERMEDIATE"
-
-  #ffmpeg -i "$INTERMEDIATE" -itsoffset "$AUDIO_SKEW" -i "$INTERMEDIATE" -map 0:v -map 1:a -preset "$PRESET" "$FINAL" -y
 fi
