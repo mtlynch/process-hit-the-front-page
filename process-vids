@@ -11,8 +11,8 @@ RAW="${RAW_DIR}/01-intro5-good.mkv"
 INTERMEDIATE="$(mktemp --suffix=.mp4)"
 FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 01 - Intro.mp4"
 CHOP_START="00:00:04.3"
-CHOP_DURATION="00:09:09.0"
-AUDIO_SKEW="0.10"
+CHOP_END="00:09:13.3"
+DELAY_AUDIO="0.16"
 
 function normalize_audio_levels() {
   INPUT_FILE="$1"
@@ -20,9 +20,9 @@ function normalize_audio_levels() {
 }
 
 if [ ! -f "$FINAL" ]; then
-  ffmpeg -ss "$CHOP_START" -i "$RAW" -t "$CHOP_DURATION" "$INTERMEDIATE" -y
+  ffmpeg -i "$RAW" -ss "$CHOP_START" -to "$CHOP_END" -preset "$PRESET" "$INTERMEDIATE" -y
   normalize_audio_levels "$INTERMEDIATE"
-  ffmpeg -i "$INTERMEDIATE" -itsoffset "$AUDIO_SKEW" -i "$INTERMEDIATE" -map 0:v -map 1:a -preset "$PRESET" "$FINAL" -y
+  ffmpeg -i "$INTERMEDIATE" -itsoffset "$DELAY_AUDIO" -i "$INTERMEDIATE" -map 0:v -map 1:a -preset "$PRESET" "$FINAL" -y
 fi
 
 RAW="${RAW_DIR}/02-understand-hn-pretty-good.mkv"
@@ -30,18 +30,18 @@ INTERMEDIATE="$(mktemp --suffix=.mp4)"
 FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 02 - Understand Hacker News.mp4"
 CHOP_START="00:00:02.5"
 CHOP_END="00:24:38.0"
-AUDIO_SKEW="0.23"
+DELAY_AUDIO="0.16"
 
 if [ ! -f "$FINAL" ]; then
-  ffmpeg -i "$RAW" -ss "$CHOP_START" -to "$CHOP_END" -c copy "$INTERMEDIATE" -y
+  ffmpeg -i "$RAW" -ss "$CHOP_START" -to "$CHOP_END" -preset "$PRESET" "$INTERMEDIATE" -y
   normalize_audio_levels "$INTERMEDIATE"
-  ffmpeg -i "$INTERMEDIATE" -itsoffset "$AUDIO_SKEW" -i "$INTERMEDIATE" -map 0:v -map 1:a -preset "$PRESET" "$FINAL" -y
+  ffmpeg -i "$INTERMEDIATE" -itsoffset "$DELAY_AUDIO" -i "$INTERMEDIATE" -map 0:v -map 1:a -preset "$PRESET" "$FINAL" -y
 fi
 
 RAW_FORMAT="${RAW_DIR}/03-choose-winning-topics-%s.mkv"
 
 FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 03 - Choose Winning Topics.mp4"
-AUDIO_SKEW="0.25"
+DELAY_AUDIO="0.25"
 
 CHOP_STARTS=("00:00:03.4" "00:00:03.0" "00:00:02.5" "00:00:02.8" "00:00:02.8")
 CHOP_ENDS=(  "00:11:53.8" "00:17:04.0" "00:03:36.9" "00:07:04.9" "00:04:12.0")
@@ -56,7 +56,7 @@ if [ ! -f "$FINAL" ]; then
     INTERMEDIATE_FILE="${INTERMEDIATE_DIR}/$(basename $RAW_FILE)"
     CHOP_START="${CHOP_STARTS[$i]}"
     CHOP_END="${CHOP_ENDS[$i]}"
-    ffmpeg  -i "$RAW_FILE" -ss "$CHOP_START" -to "$CHOP_END" -preset "$PRESET" "$INTERMEDIATE_FILE"
+    ffmpeg -i "$RAW_FILE" -ss "$CHOP_START" -to "$CHOP_END" -preset "$PRESET" "$INTERMEDIATE_FILE"
     
     echo "file '$INTERMEDIATE_FILE'" >> "$FILE_INDEX" 
   done
@@ -66,7 +66,7 @@ if [ ! -f "$FINAL" ]; then
 
   normalize_audio_levels "$MERGED_FILE"
 
-  ffmpeg -i "$MERGED_FILE" -itsoffset "$AUDIO_SKEW" -i "$MERGED_FILE" -map 0:v -map 1:a -c:v copy "$FINAL" -y
+  ffmpeg -i "$MERGED_FILE" -itsoffset "$DELAY_AUDIO" -i "$MERGED_FILE" -map 0:v -map 1:a -c:v copy "$FINAL" -y
 fi
 
 RAW="${RAW_DIR}/04-find-a-plan-b.mkv"
@@ -75,16 +75,17 @@ INTERMEDIATE_B="$(mktemp --suffix=.mp4)"
 INTERMEDIATE="$(mktemp --suffix=.mp4)"
 FILE_INDEX="$(mktemp --suffix=.txt)"
 FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 04 - Find a Plan B.mp4"
+
 CHOP_START_A="00:00:02.0"
 CHOP_END_A="00:39:36.5"
-AUDIO_SKEW="0.25"
-
 CHOP_START_B="00:39:59.0"
 CHOP_END_B="00:40:04.0"
 
+DELAY_AUDIO="0.25"
+
 if [ ! -f "$FINAL" ]; then
-  ffmpeg  -i "$RAW" -ss "$CHOP_START_A" -to "$CHOP_END_A" -c copy "$INTERMEDIATE_A" -y
-  ffmpeg  -i "$RAW" -ss "$CHOP_START_B" -to "$CHOP_END_B" -c copy "$INTERMEDIATE_B" -y
+  ffmpeg -i "$RAW" -ss "$CHOP_START_A" -to "$CHOP_END_A" -preset "$PRESET" "$INTERMEDIATE_A" -y
+  ffmpeg -i "$RAW" -ss "$CHOP_START_B" -to "$CHOP_END_B" -preset "$PRESET" "$INTERMEDIATE_B" -y
 
   echo "file '$INTERMEDIATE_A'" >  "$FILE_INDEX"
   echo "file '$INTERMEDIATE_B'" >> "$FILE_INDEX" 
@@ -93,18 +94,18 @@ if [ ! -f "$FINAL" ]; then
 
   normalize_audio_levels "$INTERMEDIATE"
 
-  ffmpeg -i "$INTERMEDIATE" -itsoffset "$AUDIO_SKEW" -i "$INTERMEDIATE" -map 0:v -map 1:a -preset "$PRESET" "$FINAL" -y
+  ffmpeg -i "$INTERMEDIATE" -itsoffset "$DELAY_AUDIO" -i "$INTERMEDIATE" -map 0:v -map 1:a -preset "$PRESET" "$FINAL" -y
 fi
 
 RAW="${RAW_DIR}/05-elevate-your-writing.mkv"
 INTERMEDIATE="$(mktemp --suffix=.mp4)"
 FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 05 - Elevate Your Writing.mp4"
-CHOP_START="00:00:02.0"
+CHOP_START="00:00:02.5"
 CHOP_END="00:39:08.5"
-AUDIO_SKEW="0.23"
+DELAY_AUDIO="0.25"
 
 if [ ! -f "$FINAL" ]; then
-  ffmpeg -i "$RAW" -ss "$CHOP_START" -to "$CHOP_END" -c copy "$INTERMEDIATE" -y
+  ffmpeg -i "$RAW" -ss "$CHOP_START" -to "$CHOP_END" -preset "$PRESET" "$INTERMEDIATE" -y
   normalize_audio_levels "$INTERMEDIATE"
-  ffmpeg -i "$INTERMEDIATE" -itsoffset "$AUDIO_SKEW" -i "$INTERMEDIATE" -map 0:v -map 1:a -preset "$PRESET" "$FINAL" -y
+  ffmpeg -i "$INTERMEDIATE" -itsoffset "$DELAY_AUDIO" -i "$INTERMEDIATE" -map 0:v -map 1:a -preset "$PRESET" "$FINAL" -y
 fi
