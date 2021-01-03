@@ -14,13 +14,21 @@ CHOP_START="00:00:04.3"
 CHOP_END="00:09:13.3"
 DELAY_AUDIO="0.16"
 
+function cut_subclip() {
+  IN="$1"
+  START="$2"
+  END="$3"
+  OUT="$4"
+  ffmpeg -i "$IN" -ss "$START" -to "$END" -preset "$PRESET" "$OUT" -y
+}
+
 function normalize_audio_levels() {
   INPUT_FILE="$1"
   ffmpeg-normalize "$INPUT_FILE" -c:a aac -b:a 192k -o "$INPUT_FILE" -f
 }
 
 if [ ! -f "$FINAL" ]; then
-  ffmpeg -i "$RAW" -ss "$CHOP_START" -to "$CHOP_END" -preset "$PRESET" "$INTERMEDIATE" -y
+  cut_subclip "$RAW" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE"
   normalize_audio_levels "$INTERMEDIATE"
   ffmpeg -i "$INTERMEDIATE" -itsoffset "$DELAY_AUDIO" -i "$INTERMEDIATE" -map 0:v -map 1:a -preset "$PRESET" "$FINAL" -y
 fi
@@ -33,7 +41,7 @@ CHOP_END="00:24:38.0"
 DELAY_AUDIO="0.16"
 
 if [ ! -f "$FINAL" ]; then
-  ffmpeg -i "$RAW" -ss "$CHOP_START" -to "$CHOP_END" -preset "$PRESET" "$INTERMEDIATE" -y
+  cut_subclip "$RAW" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE"
   normalize_audio_levels "$INTERMEDIATE"
   ffmpeg -i "$INTERMEDIATE" -itsoffset "$DELAY_AUDIO" -i "$INTERMEDIATE" -map 0:v -map 1:a -preset "$PRESET" "$FINAL" -y
 fi
@@ -56,7 +64,7 @@ if [ ! -f "$FINAL" ]; then
     INTERMEDIATE_FILE="${INTERMEDIATE_DIR}/$(basename $RAW_FILE)"
     CHOP_START="${CHOP_STARTS[$i]}"
     CHOP_END="${CHOP_ENDS[$i]}"
-    ffmpeg -i "$RAW_FILE" -ss "$CHOP_START" -to "$CHOP_END" -preset "$PRESET" "$INTERMEDIATE_FILE"
+    cut_subclip "$RAW_FILE" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE"
     
     echo "file '$INTERMEDIATE_FILE'" >> "$FILE_INDEX" 
   done
@@ -84,8 +92,8 @@ CHOP_END_B="00:40:04.0"
 DELAY_AUDIO="0.25"
 
 if [ ! -f "$FINAL" ]; then
-  ffmpeg -i "$RAW" -ss "$CHOP_START_A" -to "$CHOP_END_A" -preset "$PRESET" "$INTERMEDIATE_A" -y
-  ffmpeg -i "$RAW" -ss "$CHOP_START_B" -to "$CHOP_END_B" -preset "$PRESET" "$INTERMEDIATE_B" -y
+  cut_subclip "$RAW" "$CHOP_START_A" "$CHOP_END_A" "$INTERMEDIATE_A"
+  cut_subclip "$RAW" "$CHOP_START_B" "$CHOP_END_B" "$INTERMEDIATE_B"
 
   echo "file '$INTERMEDIATE_A'" >  "$FILE_INDEX"
   echo "file '$INTERMEDIATE_B'" >> "$FILE_INDEX" 
@@ -105,7 +113,7 @@ CHOP_END="00:39:08.5"
 DELAY_AUDIO="0.25"
 
 if [ ! -f "$FINAL" ]; then
-  ffmpeg -i "$RAW" -ss "$CHOP_START" -to "$CHOP_END" -preset "$PRESET" "$INTERMEDIATE" -y
+  cut_subclip "$RAW" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE"
   normalize_audio_levels "$INTERMEDIATE"
   ffmpeg -i "$INTERMEDIATE" -itsoffset "$DELAY_AUDIO" -i "$INTERMEDIATE" -map 0:v -map 1:a -preset "$PRESET" "$FINAL" -y
 fi
