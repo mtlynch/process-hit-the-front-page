@@ -6,8 +6,13 @@ set -eux
 PRESET="ultrafast"
 
 RAW_DIR="/mnt/htfp/raw"
-FINAL_DIR="/mnt/htfp/final"
 
+
+if [ "$PRESET" = "veryslow" ]; then
+  FINAL_DIR="/mnt/htfp/final"
+else
+  FINAL_DIR="/mnt/htfp/scratch"
+fi
 
 function cut_subclip() {
   IN="$1"
@@ -34,8 +39,6 @@ function delay_audio() {
   OUT="$3"
   ffmpeg -i "$IN" -itsoffset "$DELAY" -i "$IN" -map 0:v -map 1:a -c:v copy "$OUT" -y
 }
-
-
 
 FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 1 - Intro.mp4"
 if [ ! -f "$FINAL" ]; then
@@ -130,6 +133,36 @@ if [ ! -f "$FINAL" ]; then
 
   CHOP_START="00:00:02.5"
   CHOP_END="00:39:08.5"
+  DELAY_AUDIO="0.25"
+
+  cut_subclip "$RAW" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE"
+  normalize_audio_levels "$INTERMEDIATE"
+  delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
+fi
+
+FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 6 - Submission Day.mp4"
+if [ ! -f "$FINAL" ]; then
+  RAW="${RAW_DIR}/2021-01-08 11-30-18.mkv"
+  INTERMEDIATE="$(mktemp --suffix=.mp4)"
+
+  CHOP_START="00:00:11.7"
+  CHOP_END="00:27:32.3"
+
+  DELAY_AUDIO="0.25"
+
+  cut_subclip "$RAW" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE"
+  normalize_audio_levels "$INTERMEDIATE"
+  delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
+fi
+
+FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 7 - Recovering from Failure.mp4"
+if [ ! -f "$FINAL" ]; then
+  RAW="${RAW_DIR}/2021-01-08 12-03-33.mkv"
+  INTERMEDIATE="$(mktemp --suffix=.mp4)"
+
+  CHOP_START="00:00:03.1"
+  CHOP_END="00:16:21.5"
+
   DELAY_AUDIO="0.25"
 
   cut_subclip "$RAW" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE"
