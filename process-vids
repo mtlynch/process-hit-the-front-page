@@ -3,16 +3,11 @@
 set -eux
 
 PRESET="veryslow"
+#PRESET="ultrafast"
 
 RAW_DIR="/mnt/htfp/raw"
 FINAL_DIR="/mnt/htfp/final"
 
-RAW="${RAW_DIR}/01-intro5-good.mkv"
-INTERMEDIATE="$(mktemp --suffix=.mp4)"
-FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 01 - Intro.mp4"
-CHOP_START="00:00:04.3"
-CHOP_END="00:09:13.3"
-DELAY_AUDIO="0.16"
 
 function cut_subclip() {
   IN="$1"
@@ -20,6 +15,12 @@ function cut_subclip() {
   END="$3"
   OUT="$4"
   ffmpeg -i "$IN" -ss "$START" -to "$END" -preset "$PRESET" "$OUT" -y
+}
+
+function merge_clips() {
+  INDEX="$1"
+  OUT="$2"
+  ffmpeg -f concat -safe 0 -i "$INDEX" -c copy -max_muxing_queue_size 4096 "$OUT" -y
 }
 
 function normalize_audio_levels() {
@@ -34,34 +35,45 @@ function delay_audio() {
   ffmpeg -i "$IN" -itsoffset "$DELAY" -i "$IN" -map 0:v -map 1:a -c:v copy "$OUT" -y
 }
 
+
+
+FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 1 - Intro.mp4"
 if [ ! -f "$FINAL" ]; then
+  RAW="${RAW_DIR}/01-intro5-good.mkv"
+  INTERMEDIATE="$(mktemp --suffix=.mp4)"
+
+  CHOP_START="00:00:04.3"
+  CHOP_END="00:09:13.3"
+  DELAY_AUDIO="0.16"
+
   cut_subclip "$RAW" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE"
   normalize_audio_levels "$INTERMEDIATE"
   delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
 fi
 
-RAW="${RAW_DIR}/02-understand-hn-pretty-good.mkv"
-INTERMEDIATE="$(mktemp --suffix=.mp4)"
-FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 02 - Understand Hacker News.mp4"
-CHOP_START="00:00:02.5"
-CHOP_END="00:24:42.2"
-DELAY_AUDIO="0.16"
-
+FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 2 - Understand Hacker News.mp4"
 if [ ! -f "$FINAL" ]; then
+  RAW="${RAW_DIR}/02-understand-hn-pretty-good.mkv"
+  INTERMEDIATE="$(mktemp --suffix=.mp4)"
+
+  CHOP_START="00:00:02.5"
+  CHOP_END="00:24:42.2"
+  DELAY_AUDIO="0.16"
+
   cut_subclip "$RAW" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE"
   normalize_audio_levels "$INTERMEDIATE"
   delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
 fi
 
-RAW_FORMAT="${RAW_DIR}/03-choose-winning-topics-%s.mkv"
-
-FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 03 - Choose Winning Topics.mp4"
-DELAY_AUDIO="0.25"
-
-CHOP_STARTS=("00:00:03.4" "00:00:03.0" "00:00:02.5" "00:00:02.8" "00:00:02.8")
-CHOP_ENDS=(  "00:11:53.8" "00:17:04.0" "00:03:36.9" "00:07:04.9" "00:04:12.0")
-
+FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 3 - Choose Winning Topics.mp4"
 if [ ! -f "$FINAL" ]; then
+  RAW_FORMAT="${RAW_DIR}/03-choose-winning-topics-%s.mkv"
+  
+  DELAY_AUDIO="0.25"
+
+  CHOP_STARTS=("00:00:03.4" "00:00:03.0" "00:00:02.5" "00:00:02.8" "00:00:02.8")
+  CHOP_ENDS=(  "00:11:53.8" "00:17:04.0" "00:03:36.9" "00:07:04.9" "00:04:12.0")
+
   INTERMEDIATE_DIR="$(mktemp -d)"
   FILE_INDEX="$(mktemp --suffix=.txt)"
 
@@ -76,25 +88,23 @@ if [ ! -f "$FINAL" ]; then
     echo "file '$INTERMEDIATE_FILE'" >> "$FILE_INDEX" 
   done
 
-  MERGED_FILE="${INTERMEDIATE_DIR}/merged.mp4"
-  ffmpeg -f concat -safe 0 -i "$FILE_INDEX" -c copy -max_muxing_queue_size 4096 "$MERGED_FILE"
-
-  normalize_audio_levels "$MERGED_FILE"
-
-  delay_audio "$MERGED_FILE" "$DELAY_AUDIO" "$FINAL"
+  INTERMEDIATE="$(mktemp --suffix=.mp4)"
+  merge_clips "$FILE_INDEX" "$INTERMEDIATE"
+  normalize_audio_levels "$INTERMEDIATE"
+  delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
 fi
 
-RAW="${RAW_DIR}/04-find-a-plan-b.mkv"
-FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 04 - Find a Plan B.mp4"
-
-CHOP_START_A="00:00:02.0"
-CHOP_END_A="00:39:36.5"
-CHOP_START_B="00:39:59.0"
-CHOP_END_B="00:40:04.0"
-
-DELAY_AUDIO="0.25"
-
+FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 4 - Find a Plan B.mp4"
 if [ ! -f "$FINAL" ]; then
+  RAW="${RAW_DIR}/04-find-a-plan-b.mkv"
+
+  CHOP_START_A="00:00:02.0"
+  CHOP_END_A="00:39:36.5"
+  CHOP_START_B="00:39:59.0"
+  CHOP_END_B="00:40:04.0"
+
+  DELAY_AUDIO="0.25"
+
   INTERMEDIATE_A="$(mktemp --suffix=.mp4)"
   INTERMEDIATE_B="$(mktemp --suffix=.mp4)"
   INTERMEDIATE="$(mktemp --suffix=.mp4)"
@@ -113,28 +123,75 @@ if [ ! -f "$FINAL" ]; then
   delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
 fi
 
-RAW="${RAW_DIR}/05-elevate-your-writing.mkv"
-INTERMEDIATE="$(mktemp --suffix=.mp4)"
-FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 05 - Elevate Your Writing.mp4"
-CHOP_START="00:00:02.5"
-CHOP_END="00:39:08.5"
-DELAY_AUDIO="0.25"
-
+FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 5 - Elevate Your Writing.mp4"
 if [ ! -f "$FINAL" ]; then
+  RAW="${RAW_DIR}/05-elevate-your-writing.mkv"
+  INTERMEDIATE="$(mktemp --suffix=.mp4)"
+
+  CHOP_START="00:00:02.5"
+  CHOP_END="00:39:08.5"
+  DELAY_AUDIO="0.25"
+
   cut_subclip "$RAW" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE"
   normalize_audio_levels "$INTERMEDIATE"
   delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
 fi
 
-RAW="${RAW_DIR}/deep-dive-5-the-margins.mkv"
-FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - Deep Dive 5 - The Margins.mp4"
-
-CHOP_START_A="00:00:03.6"
-CHOP_END_A="00:08:32.8"
-CHOP_START_B="00:08:42.5"
-CHOP_END_B="00:13:33.5"
-
+FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - Deep Dive 1 - Andrew Askins.mp4"
 if [ ! -f "$FINAL" ]; then
+  RAW_FORMAT="${RAW_DIR}/03-choose-winning-topics-%s.mkv"
+  
+  DELAY_AUDIO="0.25"
+
+  RAW_FILES=(  "2021-01-07 14-51-03.mkv" "2021-01-07 14-56-32.mkv" "2021-01-07 15-08-13.mkv")
+  CHOP_STARTS=("00:00:03.3"              "00:00:02.5"              "00:00:04.8")
+  CHOP_ENDS=(  "00:03:33.0"              "00:03:32.4"              "00:04:43.0")
+
+  INTERMEDIATE_DIR="$(mktemp -d)"
+  FILE_INDEX="$(mktemp --suffix=.txt)"
+
+  for i in "${!CHOP_STARTS[@]}"; do
+    RAW_FILE="${RAW_DIR}/${RAW_FILES[$i]}"
+    INTERMEDIATE_FILE="$(mktemp --suffix=.mp4)"
+    CHOP_START="${CHOP_STARTS[$i]}"
+    CHOP_END="${CHOP_ENDS[$i]}"
+    cut_subclip "$RAW_FILE" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE_FILE"
+    
+    echo "file '$INTERMEDIATE_FILE'" >> "$FILE_INDEX" 
+  done
+
+  INTERMEDIATE="$(mktemp --suffix=.mp4)"
+  merge_clips "$FILE_INDEX" "$INTERMEDIATE"
+
+  normalize_audio_levels "$INTERMEDIATE"
+
+  delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
+fi
+
+FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - Deep Dive 4 - rachelbythebay.mp4"
+if [ ! -f "$FINAL" ]; then
+  RAW="${RAW_DIR}/2021-01-07 15-41-03.mkv"
+  INTERMEDIATE="$(mktemp --suffix=.mp4)"
+
+  CHOP_START="00:00:06.0"
+  CHOP_END="00:07:06.0"
+
+  DELAY_AUDIO="0.25"
+
+  cut_subclip "$RAW" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE"
+  normalize_audio_levels "$INTERMEDIATE"
+  delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
+fi
+
+FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - Deep Dive 5 - The Margins.mp4"
+if [ ! -f "$FINAL" ]; then
+  RAW="${RAW_DIR}/deep-dive-5-the-margins.mkv"
+
+  CHOP_START_A="00:00:03.6"
+  CHOP_END_A="00:08:32.8"
+  CHOP_START_B="00:08:42.5"
+  CHOP_END_B="00:13:33.5"
+
   INTERMEDIATE_A="$(mktemp --suffix=.mp4)"
   INTERMEDIATE_B="$(mktemp --suffix=.mp4)"
   INTERMEDIATE="$(mktemp --suffix=.mp4)"
