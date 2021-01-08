@@ -2,8 +2,8 @@
 
 set -eux
 
-PRESET="veryslow"
-#PRESET="ultrafast"
+#PRESET="veryslow"
+PRESET="ultrafast"
 
 RAW_DIR="/mnt/htfp/raw"
 FINAL_DIR="/mnt/htfp/final"
@@ -192,6 +192,8 @@ if [ ! -f "$FINAL" ]; then
   CHOP_START_B="00:08:42.5"
   CHOP_END_B="00:13:33.5"
 
+  DELAY_AUDIO="0.25"
+
   INTERMEDIATE_A="$(mktemp --suffix=.mp4)"
   INTERMEDIATE_B="$(mktemp --suffix=.mp4)"
   INTERMEDIATE="$(mktemp --suffix=.mp4)"
@@ -207,5 +209,5 @@ if [ ! -f "$FINAL" ]; then
 
   normalize_audio_levels "$INTERMEDIATE"
 
-  mv "$INTERMEDIATE" "$FINAL"
+  delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
 fi
