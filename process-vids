@@ -2,8 +2,8 @@
 
 set -eux
 
-#PRESET="veryslow"
-PRESET="ultrafast"
+PRESET="veryslow"
+#PRESET="ultrafast"
 
 RAW_DIR="/mnt/htfp/raw"
 
