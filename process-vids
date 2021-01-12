@@ -170,6 +170,21 @@ if [ ! -f "$FINAL" ]; then
   delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
 fi
 
+FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 8 - My Process from Start to Finish.mp4"
+if [ ! -f "$FINAL" ]; then
+  RAW="${RAW_DIR}/2021-01-11 13-16-52.mkv"
+  INTERMEDIATE="$(mktemp --suffix=.mp4)"
+
+  CHOP_START="00:00:45.5"
+  CHOP_END="00:35:49.8"
+
+  DELAY_AUDIO="0.25"
+
+  cut_subclip "$RAW" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE"
+  normalize_audio_levels "$INTERMEDIATE"
+  delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
+fi
+
 FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - Deep Dive 1 - Andrew Askins.mp4"
 if [ ! -f "$FINAL" ]; then
   RAW_FORMAT="${RAW_DIR}/03-choose-winning-topics-%s.mkv"
@@ -198,6 +213,21 @@ if [ ! -f "$FINAL" ]; then
 
   normalize_audio_levels "$INTERMEDIATE"
 
+  delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
+fi
+
+FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - Deep Dive 3 - Philipp Oppermann.mp4"
+if [ ! -f "$FINAL" ]; then
+  RAW="${RAW_DIR}/2021-01-11 14-07-50.mkv"
+  INTERMEDIATE="$(mktemp --suffix=.mp4)"
+
+  CHOP_START="00:00:42.1"
+  CHOP_END="00:07:50.2"
+
+  DELAY_AUDIO="0.25"
+
+  cut_subclip "$RAW" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE"
+  normalize_audio_levels "$INTERMEDIATE"
   delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
 fi
 
