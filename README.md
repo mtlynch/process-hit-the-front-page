@@ -1,3 +1,8 @@
 # process-hit-the-front-page
 
-Process videos from Hit the Front Page of Hacker News
+Process videos from Hit the Front Page of Hacker News course.
+
+## Requirements
+
+* ffmpeg
+* ffmpeg-normalize
