@@ -234,6 +234,21 @@ if [ ! -f "$FINAL" ]; then
   delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
 fi
 
+FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - Deep Dive 2 - Jen Yip.mp4"
+if [ ! -f "$FINAL" ]; then
+  RAW="${RAW_DIR}/2021-01-12 12-08-09.mkv"
+  INTERMEDIATE="$(mktemp --suffix=.mp4)"
+
+  CHOP_START="00:01:27.5"
+  CHOP_END="00:14:07.9"
+
+  DELAY_AUDIO="0.25"
+
+  cut_subclip "$RAW" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE"
+  normalize_audio_levels "$INTERMEDIATE"
+  delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
+fi
+
 FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - Deep Dive 3 - Philipp Oppermann.mp4"
 if [ ! -f "$FINAL" ]; then
   RAW="${RAW_DIR}/2021-01-11 14-07-50.mkv"
