@@ -1,12 +1,15 @@
 #!/bin/bash
 
-set -eux
+set -ex
 
 PRESET="veryslow"
-#PRESET="ultrafast"
+if [ "$1" = "--quick" ]; then
+  PRESET="ultrafast"
+fi
+
+set -u
 
 RAW_DIR="/mnt/htfp/raw"
-
 
 if [ "$PRESET" = "veryslow" ]; then
   FINAL_DIR="/mnt/htfp/final"
@@ -43,14 +46,29 @@ function delay_audio() {
 FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 1 - Intro.mp4"
 if [ ! -f "$FINAL" ]; then
   RAW="${RAW_DIR}/01-intro5-good.mkv"
-  INTERMEDIATE="$(mktemp --suffix=.mp4)"
+  
+  CHOP_START_A="00:00:04.3"
+  CHOP_END_A="00:08:00.5"
+  CHOP_START_B="00:08:30.6"
+  CHOP_END_B="00:09:13.3"
 
-  CHOP_START="00:00:04.3"
-  CHOP_END="00:09:13.3"
   DELAY_AUDIO="0.16"
 
-  cut_subclip "$RAW" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE"
+  INTERMEDIATE_A="$(mktemp --suffix=.mp4)"
+  INTERMEDIATE_B="$(mktemp --suffix=.mp4)"
+  INTERMEDIATE="$(mktemp --suffix=.mp4)"
+  FILE_INDEX="$(mktemp --suffix=.txt)"
+
+  cut_subclip "$RAW" "$CHOP_START_A" "$CHOP_END_A" "$INTERMEDIATE_A"
+  cut_subclip "$RAW" "$CHOP_START_B" "$CHOP_END_B" "$INTERMEDIATE_B"
+
+  echo "file '$INTERMEDIATE_A'" >  "$FILE_INDEX"
+  echo "file '$INTERMEDIATE_B'" >> "$FILE_INDEX" 
+  
+  merge_clips "$FILE_INDEX" "$INTERMEDIATE"
+
   normalize_audio_levels "$INTERMEDIATE"
+
   delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
 fi
 
