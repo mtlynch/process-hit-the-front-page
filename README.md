@@ -1,6 +1,6 @@
-# process-hit-the-front-page
+# Process Hit the Front Page
 
-Process videos from Hit the Front Page of Hacker News course.
+ffmpeg scripts for editing the raw footage for the course, [Hit the Front Page of Hacker News](https://hitthefrontpage.com/).
 
 ## Requirements
 
