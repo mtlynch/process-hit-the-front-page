@@ -307,34 +307,3 @@ if [ ! -f "$FINAL" ]; then
 
   delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
 fi
-
-
-
-FINAL="${FINAL_DIR}/dont-overstep-your-expertise.mp4"
-if [ ! -f "$FINAL" ]; then
-  RAW_FORMAT="${RAW_DIR}/03-choose-winning-topics-%s.mkv"
-  
-  DELAY_AUDIO="0.25"
-
-  CHOP_STARTS=("00:08:31.4")
-  CHOP_ENDS=(  "00:10:09.8")
-
-  INTERMEDIATE_DIR="$(mktemp -d)"
-  FILE_INDEX="$(mktemp --suffix=.txt)"
-
-  for i in "${!CHOP_STARTS[@]}"; do
-    INDEX=$(expr $i + 1)
-    RAW_FILE="$(printf $RAW_FORMAT $INDEX)"
-    INTERMEDIATE_FILE="${INTERMEDIATE_DIR}/$(basename $RAW_FILE)"
-    CHOP_START="${CHOP_STARTS[$i]}"
-    CHOP_END="${CHOP_ENDS[$i]}"
-    cut_subclip "$RAW_FILE" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE_FILE"
-    
-    echo "file '$INTERMEDIATE_FILE'" >> "$FILE_INDEX" 
-  done
-
-  INTERMEDIATE="$(mktemp --suffix=.mp4)"
-  merge_clips "$FILE_INDEX" "$INTERMEDIATE"
-  normalize_audio_levels "$INTERMEDIATE"
-  delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
-fi
