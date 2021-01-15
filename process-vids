@@ -307,18 +307,3 @@ if [ ! -f "$FINAL" ]; then
 
   delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
 fi
-
-FINAL="${FINAL_DIR}/Using hnrankings.info.mp4"
-if [ ! -f "$FINAL" ]; then
-  RAW="${RAW_DIR}/2021-01-08 12-03-33.mkv"
-  INTERMEDIATE="$(mktemp --suffix=.mp4)"
-
-  CHOP_START="00:05:03.5"
-  CHOP_END="00:06:38.0"
-
-  DELAY_AUDIO="0.25"
-
-  cut_subclip "$RAW" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE"
-  normalize_audio_levels "$INTERMEDIATE"
-  delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
-fi
