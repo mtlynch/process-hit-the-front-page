@@ -1,0 +1,159 @@
+#!/bin/bash
+
+# Use ffmpeg to make a clip with subtitles burned in for easy sharing.
+#
+# Example: https://twitter.com/deliberatecoder/status/1353123432783876097
+
+set -eux
+
+PRESET="veryslow"
+
+RAW_DIR="/mnt/htfp/raw"
+
+if [ "$PRESET" = "veryslow" ]; then
+  FINAL_DIR="/mnt/htfp/final"
+else
+  FINAL_DIR="/mnt/htfp/scratch"
+fi
+
+TITLES="$(mktemp --suffix=.srt)"
+echo "1
+00:00:00,000 --> 00:01:03,000
+How Lunch Money Nails Content Marketing" > "$TITLES"
+TITLE_FONT="Anton"
+TITLE_FONT_SIZE="23"
+
+# You can generate the subtitles using YouTube's video editor
+# and downloading as SRT.
+SUBTITLES="$(mktemp --suffix=.srt)"
+echo "1
+00:00:00,140 --> 00:00:01,939
+It leads people to Lunch Money
+
+2
+00:00:01,939 --> 00:00:05,350
+she's talking about this budgeting app that
+she runs
+
+3
+00:00:05,350 --> 00:00:07,540
+but she never talks about the app itself
+
+4
+00:00:07,540 --> 00:00:08,580
+she's never saying like
+
+5
+00:00:08,580 --> 00:00:11,980
+\"Oh and you should use Lunch Money because
+it has this feature and this feature\"
+
+6
+00:00:11,980 --> 00:00:15,490
+or like \"It's better than my competitors because
+of this, this, and this reason.\"
+
+7
+00:00:15,490 --> 00:00:18,279
+She never talks about it at all
+
+8
+00:00:18,279 --> 00:00:20,640
+Any features she mentions are just kind of
+incidental
+
+9
+00:00:20,640 --> 00:00:22,579
+and reading this post
+
+10
+00:00:22,579 --> 00:00:25,349
+it makes you interested in Lunch Money because
+you're reading about
+
+11
+00:00:25,349 --> 00:00:27,909
+somebody who cares a lot about quality
+
+12
+00:00:27,909 --> 00:00:30,849
+and so if you are at all interested in
+
+13
+00:00:30,849 --> 00:00:32,259
+a personal budgeting app, then you're like
+
+14
+00:00:32,259 --> 00:00:34,960
+\"I don't even really care what features it has.\"
+
+15
+00:00:34,960 --> 00:00:38,690
+\"I want to check it out because I love that
+this author cares so much
+
+16
+00:00:38,690 --> 00:00:42,510
+about what mistakes they're making and how
+they can learn from them.\"
+
+17
+00:00:42,510 --> 00:00:45,390
+So, I think that does a great job
+
+18
+00:00:45,390 --> 00:00:46,940
+This is a really underused skill
+
+19
+00:00:46,940 --> 00:00:50,850
+that people don't exercise very often
+
+20
+00:00:50,850 --> 00:00:54,239
+of writing about not how great your product
+is
+
+21
+00:00:54,239 --> 00:00:56,960
+but writing things that your audience would
+be interested in
+
+22
+00:00:56,960 --> 00:01:00,320
+and then doing it in such a way that leads
+them to your product
+
+23
+00:01:00,320 --> 00:01:01,379
+and shows that you're somebody who's knowledgeable
+
+24
+00:01:01,379 --> 00:01:02,989
+about it and can serve them
+" > "$SUBTITLES"
+SUBTITLE_FONT="DejaVuSans"
+SUBTITLE_FONT_SIZE="13"
+
+INPUT_VIDEO="${FINAL_DIR}/jenyip-excerpt.mp4"
+OUTPUT_VIDEO="${FINAL_DIR}/subtitled.mp4"
+
+DURATION=63
+
+PROGRESS_BAR_POSITION_Y=595
+PROGRESS_BAR_THICKNESS=7
+
+ffmpeg -y -i ${INPUT_VIDEO} -filter_complex "
+  color=c=black:size=720x720 [black];
+  [0:v] scale=w=720:h=in_h*720/in_w [scaled];
+  [black][scaled] overlay=y='(main_h - overlay_h)/2' [base];
+
+  [base] subtitles=filename=${TITLES}
+      :force_style='Outline=0,Shadow=0,Fontname=${TITLE_FONT},Fontsize=${TITLE_FONT_SIZE},PrimaryColour=&Hffffff&,Alignment=6,MarginL=0' [titled];
+
+  [titled] subtitles=filename=${SUBTITLES}
+      :force_style='Fontname=${SUBTITLE_FONT},Fontsize=${SUBTITLE_FONT_SIZE},PrimaryColour=&Hffffff&Alignment=2,MarginV=13' [subtitled];
+
+  color=c=red@0.8:size=720x${PROGRESS_BAR_THICKNESS} [bar];
+  [subtitled][bar] overlay=y=${PROGRESS_BAR_POSITION_Y}:x='(t/${DURATION})*main_w-main_w'
+" -t "$DURATION" -preset "$PRESET" "$OUTPUT_VIDEO"
