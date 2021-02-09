@@ -32,8 +32,21 @@ function merge_clips() {
 }
 
 function normalize_audio_levels() {
-  INPUT_FILE="$1"
-  ffmpeg-normalize "$INPUT_FILE" -c:a aac -b:a 192k -o "$INPUT_FILE" -f
+  IN="$1"
+  SCRATCH="$(mktemp --suffix=.mp4)"
+  # Overwrite the input file with the final result.
+  OUT="$IN"
+  ffmpeg -i "$IN" -af afftdn -y "$SCRATCH"
+  ffmpeg-normalize "$SCRATCH" --progress -c:a aac -b:a 192k -o "$OUT" -f
+}
+
+function adjust_volume() {
+  IN="$1"
+  VOL_ADJUST="$2"
+  SCRATCH="$(mktemp --suffix=.mp4)"
+  ffmpeg -i "$IN" -filter:a "volume=${VOL_ADJUST}" -y "$SCRATCH"
+  # Overwrite the original
+  mv "$SCRATCH" "$IN"
 }
 
 function delay_audio() {
@@ -46,7 +59,7 @@ function delay_audio() {
 FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 1 - Intro.mp4"
 if [ ! -f "$FINAL" ]; then
   RAW="${RAW_DIR}/01-intro5-good.mkv"
-  
+
   CHOP_START_A="00:00:04.3"
   CHOP_END_A="00:08:00.5"
   CHOP_START_B="00:08:30.6"
@@ -63,11 +76,13 @@ if [ ! -f "$FINAL" ]; then
   cut_subclip "$RAW" "$CHOP_START_B" "$CHOP_END_B" "$INTERMEDIATE_B"
 
   echo "file '$INTERMEDIATE_A'" >  "$FILE_INDEX"
-  echo "file '$INTERMEDIATE_B'" >> "$FILE_INDEX" 
-  
+  echo "file '$INTERMEDIATE_B'" >> "$FILE_INDEX"
+
   merge_clips "$FILE_INDEX" "$INTERMEDIATE"
 
   normalize_audio_levels "$INTERMEDIATE"
+  # Even after normalizing, the audio still ends up being too quiet.
+  adjust_volume "$INTERMEDIATE" "1.13"
 
   delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
 fi
@@ -83,13 +98,15 @@ if [ ! -f "$FINAL" ]; then
 
   cut_subclip "$RAW" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE"
   normalize_audio_levels "$INTERMEDIATE"
+  # Even after normalizing, the audio still ends up being too quiet.
+  adjust_volume "$INTERMEDIATE" "1.13"
   delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
 fi
 
 FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - 3 - Choose Winning Topics.mp4"
 if [ ! -f "$FINAL" ]; then
   RAW_FORMAT="${RAW_DIR}/03-choose-winning-topics-%s.mkv"
-  
+
   DELAY_AUDIO="0.25"
 
   CHOP_STARTS=("00:00:03.4" "00:00:03.0" "00:00:02.5" "00:00:02.8" "00:00:02.8")
@@ -105,13 +122,15 @@ if [ ! -f "$FINAL" ]; then
     CHOP_START="${CHOP_STARTS[$i]}"
     CHOP_END="${CHOP_ENDS[$i]}"
     cut_subclip "$RAW_FILE" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE_FILE"
-    
-    echo "file '$INTERMEDIATE_FILE'" >> "$FILE_INDEX" 
+
+    echo "file '$INTERMEDIATE_FILE'" >> "$FILE_INDEX"
   done
 
   INTERMEDIATE="$(mktemp --suffix=.mp4)"
   merge_clips "$FILE_INDEX" "$INTERMEDIATE"
   normalize_audio_levels "$INTERMEDIATE"
+  # Even after normalizing, the audio still ends up being too quiet.
+  adjust_volume "$INTERMEDIATE" "1.13"
   delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
 fi
 
@@ -135,7 +154,7 @@ if [ ! -f "$FINAL" ]; then
   cut_subclip "$RAW" "$CHOP_START_B" "$CHOP_END_B" "$INTERMEDIATE_B"
 
   echo "file '$INTERMEDIATE_A'" >  "$FILE_INDEX"
-  echo "file '$INTERMEDIATE_B'" >> "$FILE_INDEX" 
+  echo "file '$INTERMEDIATE_B'" >> "$FILE_INDEX"
 
   ffmpeg -f concat -safe 0 -i "$FILE_INDEX" -preset "$PRESET" "$INTERMEDIATE" -y
 
@@ -206,7 +225,7 @@ fi
 FINAL="${FINAL_DIR}/Hit the Front Page of Hacker News - Deep Dive 1 - Andrew Askins.mp4"
 if [ ! -f "$FINAL" ]; then
   RAW_FORMAT="${RAW_DIR}/03-choose-winning-topics-%s.mkv"
-  
+
   DELAY_AUDIO="0.25"
 
   RAW_FILES=(  "2021-01-07 14-51-03.mkv" "2021-01-07 14-56-32.mkv" "2021-01-07 15-08-13.mkv")
@@ -222,8 +241,8 @@ if [ ! -f "$FINAL" ]; then
     CHOP_START="${CHOP_STARTS[$i]}"
     CHOP_END="${CHOP_ENDS[$i]}"
     cut_subclip "$RAW_FILE" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE_FILE"
-    
-    echo "file '$INTERMEDIATE_FILE'" >> "$FILE_INDEX" 
+
+    echo "file '$INTERMEDIATE_FILE'" >> "$FILE_INDEX"
   done
 
   INTERMEDIATE="$(mktemp --suffix=.mp4)"
@@ -299,11 +318,27 @@ if [ ! -f "$FINAL" ]; then
   cut_subclip "$RAW" "$CHOP_START_B" "$CHOP_END_B" "$INTERMEDIATE_B"
 
   echo "file '$INTERMEDIATE_A'" >  "$FILE_INDEX"
-  echo "file '$INTERMEDIATE_B'" >> "$FILE_INDEX" 
+  echo "file '$INTERMEDIATE_B'" >> "$FILE_INDEX"
 
   ffmpeg -f concat -safe 0 -i "$FILE_INDEX" -preset "$PRESET" "$INTERMEDIATE" -y
 
   normalize_audio_levels "$INTERMEDIATE"
 
+  delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
+fi
+
+# Excerpts
+FINAL="${FINAL_DIR}/excerpts/managing-comments.mp4"
+if [ ! -f "$FINAL" ]; then
+  RAW="${RAW_DIR}/2021-01-08 11-30-18.mkv"
+  INTERMEDIATE="$(mktemp --suffix=.mp4)"
+
+  CHOP_START="00:17:36.0"
+  CHOP_END="00:18:57.0"
+
+  DELAY_AUDIO="0.25"
+
+  cut_subclip "$RAW" "$CHOP_START" "$CHOP_END" "$INTERMEDIATE"
+  normalize_audio_levels "$INTERMEDIATE"
   delay_audio "$INTERMEDIATE" "$DELAY_AUDIO" "$FINAL"
 fi
