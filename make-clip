@@ -4,9 +4,14 @@
 #
 # Example: https://twitter.com/deliberatecoder/status/1353123432783876097
 
-set -eux
+set -ex
 
 PRESET="veryslow"
+if [ "$1" = "--quick" ]; then
+  PRESET="ultrafast"
+fi
+
+set -u
 
 RAW_DIR="/mnt/htfp/raw"
 
@@ -19,7 +24,7 @@ fi
 TITLES="$(mktemp --suffix=.srt)"
 echo "1
 00:00:00,000 --> 00:01:03,000
-How Lunch Money Nails Content Marketing" > "$TITLES"
+How I Manage Hacker News Comments" > "$TITLES"
 TITLE_FONT="Anton"
 TITLE_FONT_SIZE="23"
 
@@ -27,118 +32,107 @@ TITLE_FONT_SIZE="23"
 # and downloading as SRT.
 SUBTITLES="$(mktemp --suffix=.srt)"
 echo "1
-00:00:00,140 --> 00:00:01,939
-It leads people to Lunch Money
+00:00:00,939 --> 00:00:04,000
+When I manage comments,
+the way I think about it is
 
 2
-00:00:01,939 --> 00:00:05,350
-she's talking about this budgeting app that
-she runs
+00:00:04,000 --> 00:00:08,780
+I try to imagine that I've just given
+a tech talk at a software conference
 
 3
-00:00:05,350 --> 00:00:07,540
-but she never talks about the app itself
+00:00:08,780 --> 00:00:13,849
+and so I'm now taking questions at a Q&A
 
 4
-00:00:07,540 --> 00:00:08,580
-she's never saying like
+00:00:13,849 --> 00:00:19,980
+What that means is I'm going to be gracious
+and professional in all the responses I give
 
 5
-00:00:08,580 --> 00:00:11,980
-\"Oh and you should use Lunch Money because
-it has this feature and this feature\"
+00:00:19,980 --> 00:00:25,140
+because if I'm on stage in front of hundreds
+of people, I'm not going to be rude or snarky
 
 6
-00:00:11,980 --> 00:00:15,490
-or like \"It's better than my competitors because
-of this, this, and this reason.\"
+00:00:25,140 --> 00:00:26,170
+in my responses
 
 7
-00:00:15,490 --> 00:00:18,279
-She never talks about it at all
+00:00:26,170 --> 00:00:29,630
+And so that means you definitely don't try
+to dunk on people.
 
 8
-00:00:18,279 --> 00:00:20,640
-Any features she mentions are just kind of
-incidental
+00:00:29,630 --> 00:00:34,690
+If you were on stage in front of a hundred
+people at a conference, even if somebody made
 
 9
-00:00:20,640 --> 00:00:22,579
-and reading this post
+00:00:34,690 --> 00:00:38,180
+a rude comment to you about your presentation,
+you wouldn't say to them,
 
 10
-00:00:22,579 --> 00:00:25,349
-it makes you interested in Lunch Money because
-you're reading about
+00:00:38,180 --> 00:00:40,629
+\"Oh yeah? well you're
+a stupid idiot!\"
 
 11
-00:00:25,349 --> 00:00:27,909
-somebody who cares a lot about quality
+00:00:40,629 --> 00:00:42,829
+Because you would just look bad.
 
 12
-00:00:27,909 --> 00:00:30,849
-and so if you are at all interested in
+00:00:42,829 --> 00:00:45,359
+And similarly with getting defensive.
 
 13
-00:00:30,849 --> 00:00:32,259
-a personal budgeting app, then you're like
+00:00:45,359 --> 00:00:50,149
+It's better to just behave professionally
+and try to engage in a civil discussion.
 
 14
-00:00:32,259 --> 00:00:34,960
-\"I don't even really care what features it has.\"
+00:00:50,149 --> 00:00:54,239
+So, the things I always try to do are: appreciate
+that they read my article.
 
 15
-00:00:34,960 --> 00:00:38,690
-\"I want to check it out because I love that
-this author cares so much
+00:00:54,239 --> 00:00:58,420
+Even if they disagreed, and even if they're
+being more hostile than I think they need
 
 16
-00:00:38,690 --> 00:00:42,510
-about what mistakes they're making and how
-they can learn from them.\"
+00:00:58,420 --> 00:01:03,940
+to be, I want to start by appreciating that
+they did take the time to read my article.
 
 17
-00:00:42,510 --> 00:00:45,390
-So, I think that does a great job
+00:01:03,940 --> 00:01:07,270
+And I want to try to consider what they're
+saying to me.
 
 18
-00:00:45,390 --> 00:00:46,940
-This is a really underused skill
+00:01:07,270 --> 00:01:14,020
+Even if it's in a hostile tone or it's overly
+aggressive, I try consider what they're saying
 
 19
-00:00:46,940 --> 00:00:50,850
-that people don't exercise very often
+00:01:14,020 --> 00:01:16,220
+and if I have anything to learn from it.
 
 20
-00:00:50,850 --> 00:00:54,239
-of writing about not how great your product
-is
-
-21
-00:00:54,239 --> 00:00:56,960
-but writing things that your audience would
-be interested in
-
-22
-00:00:56,960 --> 00:01:00,320
-and then doing it in such a way that leads
-them to your product
-
-23
-00:01:00,320 --> 00:01:01,379
-and shows that you're somebody who's knowledgeable
-
-24
-00:01:01,379 --> 00:01:02,989
-about it and can serve them
+00:01:16,220 --> 00:01:20,640
+And lastly, I'll try to bend over backwards
+to assume good intent.
 " > "$SUBTITLES"
 SUBTITLE_FONT="DejaVuSans"
 SUBTITLE_FONT_SIZE="13"
 
-INPUT_VIDEO="${FINAL_DIR}/jenyip-excerpt.mp4"
-OUTPUT_VIDEO="${FINAL_DIR}/subtitled.mp4"
+INPUT_VIDEO="${FINAL_DIR}/excerpts/managing-comments.mp4"
+OUTPUT_VIDEO="${FINAL_DIR}/excerpts/managing-comments-subtitled.mp4"
 
-DURATION=63
+DURATION=81
 
 PROGRESS_BAR_POSITION_Y=595
 PROGRESS_BAR_THICKNESS=7
