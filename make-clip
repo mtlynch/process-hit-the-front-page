@@ -23,7 +23,7 @@ fi
 
 TITLES="$(mktemp --suffix=.srt)"
 echo "1
-00:00:00,000 --> 00:01:03,000
+00:00:00,000 --> 00:0:03,000
 How I Manage Hacker News Comments" > "$TITLES"
 TITLE_FONT="Anton"
 TITLE_FONT_SIZE="23"

@@ -6,53 +6,55 @@ PRESET="veryslow"
 if [ "$1" = "--quick" ]; then
   PRESET="ultrafast"
 fi
+readonly PRESET
 
 set -u
 
-RAW_DIR="/mnt/htfp/raw"
+readonly RAW_DIR="/mnt/htfp/raw"
 
 if [ "$PRESET" = "veryslow" ]; then
   FINAL_DIR="/mnt/htfp/final"
 else
   FINAL_DIR="/mnt/htfp/scratch"
 fi
+readonly FINAL_DIR
 
 function cut_subclip() {
-  IN="$1"
-  START="$2"
-  END="$3"
-  OUT="$4"
+  local IN="$1"
+  local START="$2"
+  local END="$3"
+  local OUT="$4"
   ffmpeg -i "$IN" -ss "$START" -to "$END" -preset "$PRESET" "$OUT" -y
 }
 
 function merge_clips() {
-  INDEX="$1"
-  OUT="$2"
+  local INDEX="$1"
+  local OUT="$2"
   ffmpeg -f concat -safe 0 -i "$INDEX" -c copy -max_muxing_queue_size 4096 "$OUT" -y
 }
 
 function normalize_audio_levels() {
-  IN="$1"
-  SCRATCH="$(mktemp --suffix=.mp4)"
+  local IN="$1"
+  local SCRATCH="$(mktemp --suffix=.mp4)"
   # Overwrite the input file with the final result.
-  OUT="$IN"
+  local OUT="$IN"
   ffmpeg -i "$IN" -af afftdn -y "$SCRATCH"
   ffmpeg-normalize "$SCRATCH" --progress -c:a aac -b:a 192k -o "$OUT" -f
 }
 
 function adjust_volume() {
-  IN="$1"
-  VOL_ADJUST="$2"
-  SCRATCH="$(mktemp --suffix=.mp4)"
+  local IN="$1"
+  local VOL_ADJUST="$2"
+  local SCRATCH="$(mktemp --suffix=.mp4)"
   ffmpeg -i "$IN" -filter:a "volume=${VOL_ADJUST}" -y "$SCRATCH"
   # Overwrite the original
   mv "$SCRATCH" "$IN"
 }
 
 function delay_audio() {
-  IN="$1"
-  DELAY="$2"
-  OUT="$3"
+  local IN="$1"
+  local DELAY="$2"
+  local OUT="$3"
   ffmpeg -i "$IN" -itsoffset "$DELAY" -i "$IN" -map 0:v -map 1:a -c:v copy "$OUT" -y
 }
 
